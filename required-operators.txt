@@ -1,0 +1,16 @@
+NMState
+MetalLB
+cert-manager
+Cluster Observability Operator
+
+Optional:
+LVM Storage - if needed by backends
+
+Cluster Bare Metal Operator
+- Installed by default, see:
+
+```
+$ oc get clusteroperator baremetal
+NAME        VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE   MESSAGE
+baremetal   4.20.30   True        False         False      23h     
+```

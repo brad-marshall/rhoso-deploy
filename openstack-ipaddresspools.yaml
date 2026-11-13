@@ -1,0 +1,25 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  namespace: openshift-metallb
+  name: ctlplane
+spec:
+  addresses:
+    - 10.76.23.37-10.76.23.39
+  autoAssign: true
+  avoidBuggyIPs: false
+  serviceAllocation:
+    namespaces:
+      - openstack
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: internalapi
+  namespace: openshift-metallb
+spec:
+  addresses:
+    - 172.16.20.80-172.16.20.90
+  autoAssign: true
+  avoidBuggyIPs: false
+---

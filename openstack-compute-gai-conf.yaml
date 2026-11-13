@@ -1,0 +1,27 @@
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: custom-gai-conf
+  namespace: openstack
+spec:
+  edpmServiceType: custom-gai-conf
+  playbookContents: |
+    - name: Deploy gai.conf to EDPM compute nodes
+      hosts: all
+      become: true
+      tasks:
+        - name: Ensure /etc/gai.conf exists with IPv4 precedence
+          ansible.builtin.copy:
+            dest: /etc/gai.conf
+            content: |
+              precedence ::ffff:0:0/96 100
+            mode: '0644'
+            owner: root
+            group: root
+
+        - name: Ensure correct SELinux context on gai.conf
+          ansible.builtin.file:
+            path: /etc/gai.conf
+            seuser: system_u
+            serole: object_r
+            setype: etc_t

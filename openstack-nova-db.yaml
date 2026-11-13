@@ -1,0 +1,8 @@
+apiVersion: mariadb.openstack.org/v1beta1
+kind: MariaDBDatabase
+metadata:
+  name: nova-api
+  namespace: openstack
+spec:
+  databaseInstance: openstack
+  secret: osp-secret

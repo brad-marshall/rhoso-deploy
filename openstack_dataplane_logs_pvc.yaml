@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openstack-ansible-logs-pvc
+  namespace: openstack
+spec:
+  accessModes:
+    - ReadWriteMany # Must be ReadWriteMany (RWX) so multiple parallel runner pods can write simultaneously
+  resources:
+    requests:
+      storage: 20Gi # 10-20Gi is plenty for retention in a lab environment
+  storageClassName: nfs-storage # e.g., ocs-storagecluster-cephfs or similar NFS provider

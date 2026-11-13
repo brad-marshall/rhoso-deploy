@@ -1,0 +1,28 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    # CRITICAL FOR 3-NODE COMPACT CLUSTERS: 
+    # Must target 'master' because all nodes hold the control-plane role
+    machineconfiguration.openshift.io/role: master 
+  name: 99-master-selinux-nfs-booleans
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    systemd:
+      units:
+        - contents: |
+            [Unit]
+            Description=Enable SELinux Booleans for Compact Cluster Network Storage
+            After=network.target
+
+            [Service]
+            Type=oneshot
+            ExecStart=/usr/sbin/setsebool -P virt_use_nfs 1
+            RemainAfterExit=yes
+
+            [Install]
+            WantedBy=multi-user.target
+          enabled: true
+          name: selinux-nfs-tweak.service

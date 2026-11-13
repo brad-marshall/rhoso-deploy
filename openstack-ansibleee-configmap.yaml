@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openstack-aee-custom-env
+  namespace: openstack
+data:
+  # Tell Ansible where to look for native python data filters inside the container
+  ANSIBLE_FILTER_PLUGINS: "/usr/share/ansible/plugins/filter:/usr/share/ansible_collections/ansible/netcommon/plugins/filter"

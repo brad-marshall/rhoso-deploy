@@ -1,0 +1,39 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-master-rabbitmq-dnat-fix
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    storage:
+      files:
+        - path: /etc/sysctl.d/99-rp-filter.conf
+          mode: 420
+          overwrite: true
+          contents:
+            source: data:text/plain;charset=utf-8;base64,bmV0LmlwdjQuaXBfZm9yd2FyZCA9IDEKbmV0LmlwdjQuY29uZi5hbGwuZm9yd2FyZGluZyA9IDEKbmV0LmlwdjQuY29uZi5hbGwucnBfZmlsdGVyID0gMgpuZXQuaXB2NC5jb25mLmRlZmF1bHQucnBfZmlsdGVyID0gMgpuZXQuaXB2NC5jb25mLmVuczJmMC5ycF9maWx0ZXIgPSAyCm5ldC5pcHY0LmNvbmYuZW5zMmYxLnJwX2ZpbHRlciA9IDIKbmV0LmlwdjQuY29uZi5ib25kMC5ycF9maWx0ZXIgPSAyCg==
+        - path: /usr/local/bin/enforce-rabbitmq-dnat.sh
+          mode: 493
+          overwrite: true
+          contents:
+            source: data:text/plain;charset=utf-8;base64,IyEvYmluL2Jhc2gKRVRQX1JVTEU9JChpcHRhYmxlcy1zYXZlIC10IG5hdCB8IGdyZXAgIk9WTi1LVUJFLUVUUCIgfCBncmVwICJkcG9ydCA1NjcxIiB8IGdyZXAgIjE2OS4yNTQuMC4zIiB8IGhlYWQgLW4xKQoKaWYgW1sgLXogIiRFVFBfUlVMRSIgXV07IHRoZW4KICBleGl0IDAKZmkKClZJUD0kKGVjaG8gIiRFVFBfUlVMRSIgfCBncmVwIC1vUCAnKD88PS1kIClcZCtcLlxkK1wuXGQrXC5cZCsnKQpOT0RFUE9SVD0kKGVjaG8gIiRFVFBfUlVMRSIgfCBncmVwIC1vUCAnKD88PTE2OVwuMjU0XC4wXC4zOilcZCsnKQpPVk5fSVA9JChpcCAtNCBhZGRyIHNob3cgZGV2IG92bi1rOHMtbXAwIDI+L2Rldi9udWxsIHwgYXdrICcvaW5ldCAvIHtwcmludCAkMn0nIHwgY3V0IC1kLyAtZjEpCgppZiBbWyAteiAiJFZJUCIgfHwgLXogIiROT0RFUE9SVCIgfHwgLXogIiRPVk5fSVAiIF1dOyB0aGVuCiAgZXhpdCAwCmZpCgpSVUxFPSItZCAke1ZJUH0vMzIgLXAgdGNwIC1tIHRjcCAtLWRwb3J0IDU2NzEgLWogRE5BVCAtLXRvLWRlc3RpbmF0aW9uICR7T1ZOX0lQfToke05PREVQT1JUfSIKCmlmICEgaXB0YWJsZXMgLXQgbmF0IC1DIFBSRVJPVVRJTkcgJFJVTEUgMj4vZGV2L251bGw7IHRoZW4KICBpcHRhYmxlcyAtdCBuYXQgLUkgUFJFUk9VVElORyAxICRSVUxFCmZpCgo=
+    systemd:
+      units:
+        - name: rabbitmq-dnat-fix.service
+          enabled: true
+          contents: |
+            [Unit]
+            Description=Enforce RabbitMQ VIP DNAT override to routable OVN IP
+            After=network-online.target ovs-vswitchd.service
+            Wants=network-online.target
+
+            [Service]
+            Type=oneshot
+            ExecStart=/usr/local/bin/enforce-rabbitmq-dnat.sh
+            RemainAfterExit=yes
+
+            [Install]
+            WantedBy=multi-user.target

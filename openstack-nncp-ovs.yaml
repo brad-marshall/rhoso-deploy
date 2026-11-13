@@ -1,0 +1,28 @@
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: osp-worker-2
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: worker2
+  desiredState:
+    interfaces:
+    - name: internalapi
+      type: ovs-interface
+      state: up
+      ipv4:
+        enabled: true
+        address:
+        - ip: 172.16.20.11
+          prefix-length: 24
+    - name: br-ex
+      type: ovs-bridge
+      state: up
+      bridge:
+        allow-extra-patch-ports: true
+        port:
+        - name: bond0
+        - name: internalapi
+          vlan:
+            mode: access
+            tag: 20

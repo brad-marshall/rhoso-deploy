@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cinder-hostmount-binding
+  namespace: openstack
+subjects:
+- kind: ServiceAccount
+  name: cinder-cinder
+  namespace: openstack
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:openshift:scc:hostmount-anyuid

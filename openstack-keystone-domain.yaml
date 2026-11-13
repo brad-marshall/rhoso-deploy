@@ -1,0 +1,68 @@
+# Secret for domain configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keystone-domains
+  namespace: openstack
+type: Opaque
+stringData:
+  keystone.idm.conf: |
+    [DEFAULT]
+    debut = True
+
+    [identity]
+    driver = ldap
+
+    [ldap]
+    # 10.76.23.245, 10.76.23.244, 10.76.23.243
+    url = ldaps://10.76.23.245:636,ldaps://10.76.23.244:636,ldaps://10.76.23.243:636
+    user = uid=svc-ldap,cn=users,cn=accounts,dc=gpslab,dc=cbr,dc=redhat,dc=com
+    password = 0055ldap
+    suffix = dc=gpslab,dc=cbr,dc=redhat,dc=com
+
+    # Use this for AD authentication
+    #user_tree_dn = cn=users,cn=accounts,dc=gpslab,dc=cbr,dc=redhat,dc=com
+    #user_objectclass = person
+    #user_id_attribute = sAMAccountName
+    #user_name_attribute = sAMAccountName
+    #user_mail_attribute = mail
+    #user_enabled_attribute = userAccountControl
+    #user_enabled_mask = 2
+    #user_enabled_default = 512
+    #
+    #group_tree_dn = ou=Groups,dc=gpslab,dc=cbr,dc=redhat,dc=com
+    #group_objectclass = group
+    #group_id_attribute = cn
+    #group_name_attribute = cn
+    #group_member_attribute = member
+
+    # Use this for LDAP authentication    
+    user_tree_dn = cn=users,cn=accounts,dc=gpslab,dc=cbr,dc=redhat,dc=com
+    user_objectclass = posixAccount
+    user_id_attribute = uid
+    user_name_attribute = uid
+    user_mail_attribute = mail
+
+    group_tree_dn = cn=groups,cn=accounts,dc=gpslab,dc=cbr,dc=redhat,dc=com
+    # Either groupOfNames or ipausergroup
+    group_objectclass = groupOfNames
+    group_id_attribute = cn
+    group_name_attribute = cn
+    group_member_attribute = member
+    group_desc_attribute = description
+    group_members_are_ids = False
+
+    #use_tls = True
+    tls_cacertfile = /etc/pki/ca-trust/source/anchors/idm-ca.crt
+    tls_req_cert = allow
+    use_tls = false
+
+    user_allow_create = false
+    user_allow_update = false
+    user_allow_delete = false
+    group_allow_create = false
+    group_allow_update = false
+    group_allow_delete = false
+
+    # IdM Account Status Mapping
+    user_enabled_emulation = False

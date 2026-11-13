@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rhoso-repo-override
+  namespace: openstack
+data:
+  rhoso-override.repo: |
+    [rhoso-18-override]
+    name=Red Hat OpenStack Services on OpenShift 18.0 (Override)
+    baseurl=https://redhat.com
+    enabled=1
+    gpgcheck=1
+    gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+    [rhceph-7-override]
+    name=Red Hat Ceph Storage 7 Tools (Override)
+    baseurl=https://redhat.com
+    enabled=1
+    gpgcheck=1
+    gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release

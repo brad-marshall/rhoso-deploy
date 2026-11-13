@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dnsmasq-dns-external
+  namespace: openstack
+  annotations:
+    metallb.io/address-pool: internalapi
+    metallb.io/allow-shared-ip: internalapi
+    metallb.universe.tf/address-pool: internalapi
+    metallb.universe.tf/allow-shared-ip: internalapi
+spec:
+  type: LoadBalancer
+  selector:
+    service: dnsmasq
+  ports:
+    - name: dns-udp
+      port: 53
+      targetPort: 5353
+      protocol: UDP
+    - name: dns-tcp
+      port: 53
+      targetPort: 5353
+      protocol: TCP

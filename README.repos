@@ -1,0 +1,71 @@
+Repos required:
+
+[rhel-9-for-x86_64-baseos-rpms]
+name = Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
+baseurl = https://cdn.redhat.com/content/dist/rhel9/$releasever/x86_64/baseos/os
+enabled = 1
+gpgcheck = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+sslverify = 1
+sslcacert = /etc/rhsm/ca/redhat-uep.pem
+sslclientkey = /etc/pki/entitlement/5165688954944391400-key.pem
+sslclientcert = /etc/pki/entitlement/5165688954944391400.pem
+sslverifystatus = 1
+metadata_expire = 86400
+enabled_metadata = 1
+
+[rhel-9-for-x86_64-appstream-rpms]
+name = Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
+baseurl = https://cdn.redhat.com/content/dist/rhel9/$releasever/x86_64/appstream/os
+enabled = 1
+gpgcheck = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+sslverify = 1
+sslcacert = /etc/rhsm/ca/redhat-uep.pem
+sslclientkey = /etc/pki/entitlement/5165688954944391400-key.pem
+sslclientcert = /etc/pki/entitlement/5165688954944391400.pem
+sslverifystatus = 1
+metadata_expire = 86400
+enabled_metadata = 1
+
+[rhoso-18.0-for-rhel-9-x86_64-rpms]
+name = Red Hat OpenStack Services on OpenShift 18.0 for RHEL 9 x86_64 (RPMs)
+baseurl = https://cdn.redhat.com/content/dist/layered/rhel9/x86_64/rhoso/18.0/os
+enabled = 1
+gpgcheck = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+sslverify = 1
+sslcacert = /etc/rhsm/ca/redhat-uep.pem
+sslclientkey = /etc/pki/entitlement/5165688954944391400-key.pem
+sslclientcert = /etc/pki/entitlement/5165688954944391400.pem
+sslverifystatus = 1
+metadata_expire = 86400
+enabled_metadata = 1
+
+[rhceph-7-tools-for-rhel-9-x86_64-rpms]
+name = Red Hat Ceph Storage Tools 7 for RHEL 9 x86_64 (RPMs)
+baseurl = https://cdn.redhat.com/content/dist/layered/rhel9/x86_64/rhceph-tools/7/os
+enabled = 1
+gpgcheck = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+sslverify = 1
+sslcacert = /etc/rhsm/ca/redhat-uep.pem
+sslclientkey = /etc/pki/entitlement/5165688954944391400-key.pem
+sslclientcert = /etc/pki/entitlement/5165688954944391400.pem
+sslverifystatus = 1
+metadata_expire = 86400
+enabled_metadata = 1
+
+[fast-datapath-for-rhel-9-x86_64-rpms]
+name = Fast Datapath for RHEL 9 x86_64 (RPMs)
+baseurl = https://cdn.redhat.com/content/dist/layered/rhel9/x86_64/fast-datapath/os
+enabled = 0
+gpgcheck = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+sslverify = 1
+sslcacert = /etc/rhsm/ca/redhat-uep.pem
+sslclientkey = /etc/pki/entitlement/5165688954944391400-key.pem
+sslclientcert = /etc/pki/entitlement/5165688954944391400.pem
+metadata_expire = 86400
+enabled_metadata = 0
+

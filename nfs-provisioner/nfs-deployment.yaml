@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner
+  namespace: nfs-provisioner
+  labels:
+    app: nfs-client-provisioner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: registry.k8s.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: k8s-sigs.io/nfs-subdir-external-provisioner
+            - name: NFS_SERVER
+              value: 10.76.23.40 # Replace with your NFS Server IP
+            - name: NFS_PATH
+              value: /nfsshare/rhoso/volumes # Replace with your NFS Export Path
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 10.76.23.40 # Replace with your NFS Server IP
+            path: /nfsshare/rhoso/volumes # Replace with your NFS Export Path

@@ -1,0 +1,240 @@
+# Repeated for all the workers
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: osp-worker-1
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: worker1
+    node-role.kubernetes.io/worker: ""
+  desiredState:
+    interfaces:
+    # ----------------------------------------------------
+    # Tagged OpenStack Isolated Networks
+    # ----------------------------------------------------
+    - name: internalapi
+      description: Internal API VLAN interface
+      type: vlan
+      state: up
+      vlan:
+        base-iface: bond0
+        id: 20
+        reorder-headers: true
+      ipv4:
+        enabled: true
+        dhcp: false
+        address:
+        - ip: 172.16.20.10
+          prefix-length: 24
+      ipv6:
+        enabled: false
+
+    - name: storage
+      description: Storage VLAN interface
+      type: vlan
+      state: up
+      vlan:
+        base-iface: bond0
+        id: 10
+        reorder-headers: true
+      ipv4:
+        enabled: true
+        dhcp: false
+        address:
+        - ip: 172.16.10.21
+          prefix-length: 24
+      ipv6:
+        enabled: false
+
+    - name: tenant
+      description: Tenant Overlay Network (Geneve) VLAN interface
+      type: vlan
+      state: up
+      vlan:
+        base-iface: bond0
+        id: 21
+        reorder-headers: true
+      ipv4:
+        enabled: true
+        dhcp: false
+        # Note: IP allocation is typically handled via NetConfig CR allocation pool, 
+        # but if manually specifying per-node static IPs, you can retain this block:
+        address:
+        - ip: 172.16.21.10
+          prefix-length: 24
+      ipv6:
+        enabled: false
+
+#    - name: external
+#      description: External Routable Floating IP VLAN interface
+#      type: vlan
+#      state: up
+#      vlan:
+#        base-iface: bond0
+#        id: 23                # <-- Adjust to match your network team's external VLAN ID
+#        reorder-headers: true
+#      ipv4:
+#        enabled: false        # <-- Keep IP assignment disabled on the host level
+#      ipv6:
+#        enabled: false
+
+---
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: osp-worker-2
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: worker2
+    node-role.kubernetes.io/worker: ""
+  desiredState:
+    interfaces:
+    # ----------------------------------------------------
+    # Tagged OpenStack Isolated Networks
+    # ----------------------------------------------------
+    - name: internalapi
+      description: Internal API VLAN interface
+      type: vlan
+      state: up
+      vlan:
+        base-iface: bond0
+        id: 20
+        reorder-headers: true
+      ipv4:
+        enabled: true
+        dhcp: false
+        address:
+        - ip: 172.16.20.11
+          prefix-length: 24
+      ipv6:
+        enabled: false
+
+    - name: storage
+      description: Storage VLAN interface
+      type: vlan
+      state: up
+      vlan:
+        base-iface: bond0
+        id: 10
+        reorder-headers: true
+      ipv4:
+        enabled: true
+        dhcp: false
+        address:
+        - ip: 172.16.10.22
+          prefix-length: 24
+      ipv6:
+        enabled: false
+
+    - name: tenant
+      description: Tenant Overlay Network (Geneve) VLAN interface
+      type: vlan
+      state: up
+      vlan:
+        base-iface: bond0
+        id: 21
+        reorder-headers: true
+      ipv4:
+        enabled: true
+        dhcp: false
+        # Note: IP allocation is typically handled via NetConfig CR allocation pool, 
+        # but if manually specifying per-node static IPs, you can retain this block:
+        address:
+        - ip: 172.16.21.11
+          prefix-length: 24
+      ipv6:
+        enabled: false
+
+#    - name: external
+#      description: External Routable Floating IP VLAN interface
+#      type: vlan
+#      state: up
+#      vlan:
+#        base-iface: bond0
+#        id: 23                # <-- Adjust to match your network team's external VLAN ID
+#        reorder-headers: true
+#      ipv4:
+#        enabled: false        # <-- Keep IP assignment disabled on the host level
+#      ipv6:
+#        enabled: false
+
+---
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: osp-worker-3
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: worker3
+    node-role.kubernetes.io/worker: ""
+  desiredState:
+    interfaces:
+    # ----------------------------------------------------
+    # Tagged OpenStack Isolated Networks
+    # ----------------------------------------------------
+    - name: internalapi
+      description: Internal API VLAN interface
+      type: vlan
+      state: up
+      vlan:
+        base-iface: bond0
+        id: 20
+        reorder-headers: true
+      ipv4:
+        enabled: true
+        dhcp: false
+        address:
+        - ip: 172.16.20.12
+          prefix-length: 24
+      ipv6:
+        enabled: false
+
+    - name: storage
+      description: Storage VLAN interface
+      type: vlan
+      state: up
+      vlan:
+        base-iface: bond0
+        id: 10
+        reorder-headers: true
+      ipv4:
+        enabled: true
+        dhcp: false
+        address:
+        - ip: 172.16.10.23
+          prefix-length: 24
+      ipv6:
+        enabled: false
+
+    - name: tenant
+      description: Tenant Overlay Network (Geneve) VLAN interface
+      type: vlan
+      state: up
+      vlan:
+        base-iface: bond0
+        id: 21
+        reorder-headers: true
+      ipv4:
+        enabled: true
+        dhcp: false
+        # Note: IP allocation is typically handled via NetConfig CR allocation pool, 
+        # but if manually specifying per-node static IPs, you can retain this block:
+        address:
+        - ip: 172.16.21.12
+          prefix-length: 24
+      ipv6:
+        enabled: false
+
+#    - name: external
+#      description: External Routable Floating IP VLAN interface
+#      type: vlan
+#      state: up
+#      vlan:
+#        base-iface: bond0
+#        id: 23                # <-- Adjust to match your network team's external VLAN ID
+#        reorder-headers: true
+#      ipv4:
+#        enabled: false        # <-- Keep IP assignment disabled on the host level
+#      ipv6:
+#        enabled: false
+---

@@ -1,0 +1,28 @@
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: ctlplane
+  namespace: openshift-metallb
+spec:
+  ipAddressPools:
+  - ctlplane
+  interfaces:
+  - br-ex
+  nodeSelectors:
+  - matchLabels:
+      node-role.kubernetes.io/worker: ""
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: internalapi
+  namespace: openshift-metallb
+spec:
+  ipAddressPools:
+  - internalapi
+  interfaces:
+  - internalapi
+  nodeSelectors:
+  - matchLabels:
+      node-role.kubernetes.io/worker: ""
+---

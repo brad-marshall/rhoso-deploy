@@ -1,0 +1,17 @@
+apiVersion: network.openstack.org/v1beta1
+kind: DNSData
+metadata:
+  name: custom-endpoints
+  namespace: openstack
+spec:
+  dnsDataLabelSelectorValue: dnsdata
+  hosts:
+    - hostnames:
+        - keystone-internal.ctlplane.rhoso.rhlab.local
+        - glance-internal.ctlplane.rhoso.rhlab.local
+        - nova-internal.ctlplane.rhoso.rhlab.local
+        - neutron-internal.ctlplane.rhoso.rhlab.local
+        - cinder-internal.ctlplane.rhoso.rhlab.local
+        - placement-internal.ctlplane.rhoso.rhlab.local
+        - horizon-openstack.apps.rhoso.rhlab.local
+      ip: 172.16.20.80

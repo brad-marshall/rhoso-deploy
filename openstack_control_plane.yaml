@@ -1,0 +1,433 @@
+# Taken from https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/deploying_red_hat_openstack_services_on_openshift/assembly_creating-the-control-plane
+
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack-control-plane
+  namespace: openstack
+spec:
+  netConfig:
+    includeControlPlane: true  # Instructs services to expose themselves to the nodes
+  debug:
+    cinderVolume: true
+    cinderBackup: true
+    glance: true
+    keystone: true
+    neutron: true
+    nova: true
+    placement: true
+  secret: osp-secret
+  storageClass: nfs-storage
+  tls:
+    podLevel:
+      enabled: true
+      internal:
+        # Matches the issuer created for openstack
+        issuerName: openstack-internal
+    ingress:
+      enabled: true
+      api:
+        # Uses the same internal issuer for public endpoints in the lab
+        issuerName: openstack-internal
+        # OCP ingress controller manages the actual external route termination
+
+  # DNS settings
+  # --- ADD THIS BLOCK ---
+  dns:
+    enabled: true
+    template:
+      override:
+        service:
+          internal:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.io/address-pool: internalapi
+                metallb.io/allow-shared-ip: internalapi
+            spec:
+              type: LoadBalancer
+              ports:
+              - name: dns-udp
+                port: 53
+                targetPort: 5353
+                protocol: UDP
+              - name: dns-tcp
+                port: 53
+                targetPort: 5353
+                protocol: TCP
+      options:
+        # Local service domain handled locally
+        - key: server
+          values: 
+            - /openstack.svc/
+        - key: server
+          values:
+            - /rhoso.rhlab.local/10.76.23.45  # Set to your lab DNS IP
+        - key: server
+          values:
+            - "10.2.32.67"
+        # Get the address from:
+        #   $ oc get service keystone-internal -n openstack -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+        #   $ oc get secret openstack-config-secret -n openstack -o jsonpath='{.data.cloudrc}' | base64 -d | grep OS_AUTH_URL
+        - key: host-record
+          values:
+            # OS_AUTH_URL
+            - "keystone-public-openstack.apps.rhoso.rhlab.local,172.16.20.80"
+            # Internal loadbalancers
+            - "keystone-internal.ctlplane.rhoso.rhlab.local,172.16.20.80"
+            - "keystone-public.ctlplane.rhoso.rhlab.local,172.16.20.80"
+            - "glance-internal.ctlplane.rhoso.rhlab.local,172.16.20.80"
+            - "nova-internal.ctlplane.rhoso.rhlab.local,172.16.20.80"
+            - "neutron-internal.ctlplane.rhoso.rhlab.local,172.16.20.80"
+            - "cinder-internal.ctlplane.rhoso.rhlab.local,172.16.20.80"
+            - "placement-internal.ctlplane.rhoso.rhlab.local,172.16.20.80"
+
+# Cinder storage
+  cinder:
+    apiOverride:
+      route: {}
+    template:
+      databaseInstance: openstack
+      secret: osp-secret
+#      extraMounts:
+#        - extraVol:
+#          - mounts:
+#            - name: nfs-shares-volume
+#              mountPath: /etc/cinder/nfs_shares
+#              subPath: shares.conf
+#              readOnly: true
+#            propagation:
+#              - nfs # Must match the exact name used below in cinderVolumes
+#            volumes:
+#              - name: nfs-shares-volume
+#                secret:
+#                  secretName: cinder-volume-nfs-secrets
+#      extraMounts:
+#        - name: nfs-backend-storage
+#          region: r1
+#          extraVol:
+#            # THIS IS CRITICAL FOR RHOSO: 
+#            # Tells the operator to inject this mount *only* into the 'nfs-backend' pod
+#            - propagation:
+#                - nfs # Must match the exact name under cinderVolumes below
+#              mounts:
+#                - name: cinder-mount
+#                  mountPath: /var/lib/cinder/mnt
+#              volumes:
+#                - name: cinder-mount
+#                  persistentVolumeClaim:
+#                    claimName: cinder-nfs-rwx-pvc # Your newly created RWX PVC
+      cinderAPI:
+        replicas: 1
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.16.20.80
+              spec:
+                type: LoadBalancer
+      cinderScheduler:
+        replicas: 1
+      cinderBackup:
+        networkAttachments:
+        - storage
+        replicas: 0
+      cinderVolumes:
+        nfs:
+          customServiceConfig: |
+            [nfs]
+            volume_backend_name=nfs
+            volume_driver=cinder.volume.drivers.nfs.NfsDriver
+            nas_host = 172.16.10.40
+            nas_share_path = /nfsshare/rhoso/cinder
+            nfs_mount_options = vers=4.2,proto=tcp,hard,nolock
+
+            # BYPASSES CINDER'S INTERNAL MOUNTING & NETWORK CODE Completely
+            nas_secure_file_operations = false
+            nas_secure_file_permissions = false
+            nfs_snapshot_support = false
+          networkAttachments:
+            - storage
+# Nova compute
+  nova:
+    apiOverride:
+      route: {}
+    template:
+      secret: osp-secret
+      apiDatabaseInstance: openstack
+      apiServiceTemplate:
+        replicas: 1
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.16.20.80
+              spec:
+                type: LoadBalancer
+      metadataServiceTemplate:
+        replicas: 1
+        override:
+          service:
+            internal:
+              metadata:
+                annotations:
+                  metallb.universe.tf/address-pool: internalapi
+                  metallb.universe.tf/allow-shared-ip: internalapi
+                  metallb.universe.tf/loadBalancerIPs: 172.16.20.80
+              spec:
+                type: LoadBalancer
+      schedulerServiceTemplate:
+        replicas: 1
+      cellTemplates:
+        cell0:
+          cellDatabaseAccount: nova-cell0
+          cellDatabaseInstance: openstack
+          hasAPIAccess: true
+        cell1:
+          cellDatabaseAccount: nova-cell1
+          cellDatabaseInstance: openstack-cell1
+          hasAPIAccess: true
+          messagingBus:
+            cluster: rabbitmq-cell1
+          noVNCProxyServiceTemplate:
+            enabled: true
+            networkAttachments:
+             - ctlplane
+
+# Galera - database
+  galera:
+    enabled: true
+    templates:
+      openstack:
+        storageRequest: 10Gi
+        secret: osp-secret
+        replicas: 1
+      openstack-cell1:
+        storageRequest: 10Gi
+        secret: osp-secret
+        replicas: 1
+
+# Rabbitmq - message bus
+  rabbitmq:
+    templates:
+      rabbitmq:
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.16.20.85
+            spec:
+              type: LoadBalancer
+              externalTrafficPolicy: Cluster
+              internalTrafficPolicy: Cluster
+      rabbitmq-cell1:
+        override:
+          service:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.16.20.86
+            spec:
+              type: LoadBalancer
+              externalTrafficPolicy: Local
+              internalTrafficPolicy: Cluster
+
+# Keystone identity
+  keystone:
+    apiOverride:
+      route: {}
+    template:
+      databaseAccount: keystone
+      databaseInstance: openstack
+      memcachedInstance: memcached
+      trustFlushSchedule: "1 * * * *"
+      secret: osp-secret
+      replicas: 1
+      override:
+        service:
+          internal:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.16.20.80
+            spec:
+              type: LoadBalancer
+      # This is for AD auth
+      # Need to update the keystone-domains secret keystone.AD.conf
+      # and create a domain that matches the AD:
+      # $ openstack domain create AD
+      # Also add roles as required:
+      # $ openstack role add --project <project_name> --group <ad_group_name> --group-domain AD member
+      #
+      # lab idm: 10.76.23.245, 10.76.23.244, 10.76.23.243   usual creds
+
+      # TODO: Uncomment this once AD auth is setup 
+      customServiceConfig: |
+        [identity]
+        domain_specific_drivers_enabled = True
+      extraMounts:
+        - name: keystone-domains
+          region: r1
+          extraVol:
+            - propogation:
+                - Keystone
+              extraVolType: Conf
+              mounts:
+                - name: keystone-domains
+                  mountPath: /etc/keystone/domains/keystone.idm.conf
+                  subPath: keystone.idm.conf
+                  readOnly: true
+              volumes:
+                - name: keystone-domains
+                  secret:
+                    secretName: keystone-domains
+        - name: keystone-ldap-ca
+          region: r1
+          extraVol:
+            - propogation:
+                - Keystone
+              extraVolType: Conf
+              mounts:
+                - name: ldap-ca-secret
+                  mountPath: /etc/pki/ca-trust/source/anchors/idm-ca.crt
+                  subPath: idm-ca.crt
+                  readOnly: true
+              volumes:
+                - name: ldap-ca-secret
+                  secret:
+                    secretName: ldap-ca-secret
+
+# Glance images
+  glance:
+    apiOverrides:
+      default:
+        route: {}
+    template:
+      databaseInstance: openstack
+      databaseAccount: openstack
+      glanceAPIs:
+        default:
+          replicas: 1
+          type: single
+          storage:
+            storageClass: nfs-storage
+            storageRequest: 50Gi
+          override:
+            service:
+              internal:
+                metadata:
+                  annotations:
+                    metallb.universe.tf/address-pool: internalapi
+                    metallb.universe.tf/allow-shared-ip: internalapi
+                    metallb.universe.tf/loadBalancerIPs: 172.16.20.80
+                spec:
+                  type: LoadBalancer
+          networkAttachments:
+          - storage
+      secret: osp-secret
+      keystoneEndpoint: default
+      passwordSelectors:
+        service: GlancePassword
+        admin: AdminPassword
+
+# Neutron networking
+  neutron:
+    apiOverride:
+      route: {}
+    template:
+      ipv6: false
+      replicas: 1
+      override:
+        service:
+          internal:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.16.20.80
+            spec:
+              type: LoadBalancer
+      databaseInstance: openstack
+      databaseAccount: neutron
+      secret: osp-secret
+      memcachedInstance: memcached
+      networkAttachments:
+      - internalapi
+      passwordSelectors:
+        service: NeutronPassword  # Maps to the "NeutronPassword" key inside your osp-secret
+        database: NeutronDatabasePassword
+
+
+# Watcher?
+  watcher:
+    enabled: false
+
+  memcached:
+    enabled: true
+    templates:
+      memcached:
+        replicas: 3
+
+# OVN
+  ovn:
+    template:
+      ipv6: false
+      ovnServiceNetMap:
+        internalapi: 172.16.20.0/24   # <-- Matches your physical lab's routeable subnet!
+      ovnDBCluster:
+        ovndbcluster-nb:
+          replicas: 1
+          dbType: NB
+          storageRequest: 10G
+          networkAttachment: internalapi
+        ovndbcluster-sb:
+          replicas: 1
+          dbType: SB
+          storageRequest: 10G
+          networkAttachment: internalapi
+      ovnNorthd: {}
+      ovnController:
+        networkAttachment: tenant
+
+# Nova placement
+  placement:
+    apiOverride:
+      route: {}
+    template:
+      databaseAccount: placement
+      override:
+        service:
+          internal:
+            metadata:
+              annotations:
+                metallb.universe.tf/address-pool: internalapi
+                metallb.universe.tf/allow-shared-ip: internalapi
+                metallb.universe.tf/loadBalancerIPs: 172.16.20.80
+            spec:
+              type: LoadBalancer
+      databaseInstance: openstack
+      databaseAccount: placement
+      replicas: 1
+      secret: osp-secret
+      passwordSelectors:
+        service: PlacementPassword
+        admin: AdminPassword
+
+# Telemetry - ceilometer, prometheus
+# When enabled needs Cluster Observability Operator in RHOCP cluster
+  telemetry:
+    enabled: false
+
+  horizon:
+    enabled: true
+    template:
+      memcachedInstance: memcached

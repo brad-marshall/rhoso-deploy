@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cinder-nfs-shares-configmap
+  namespace: openstack
+data:
+  # This tells Cinder's driver: "Your share is already local at this path"
+  nfs_shares: |
+    localhost:/var/lib/cinder/mnt

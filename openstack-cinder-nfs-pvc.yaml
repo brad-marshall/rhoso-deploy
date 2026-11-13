@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cinder-nfs-rwx-pvc
+  namespace: openstack
+spec:
+  accessModes:
+    - ReadWriteMany  # Enables concurrent multi-node mounting
+  storageClassName: nfs-storage
+  resources:
+    requests:
+      storage: 200Gi  # Adjust based on your PoC lab size

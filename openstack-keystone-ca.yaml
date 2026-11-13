@@ -1,0 +1,35 @@
+# Secret for domain configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ldap-ca-secret
+  namespace: openstack
+type: Opaque
+stringData:
+  idm-ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIEbTCCAtWgAwIBAgIQOmpGkkZrycG4cCfYNCLC5DANBgkqhkiG9w0BAQsFADBA
+    MR4wHAYDVQQKDBVHUFNMQUIuQ0JSLlJFREhBVC5DT00xHjAcBgNVBAMMFUNlcnRp
+    ZmljYXRlIEF1dGhvcml0eTAeFw0yNjA5MDMwNTUwMjVaFw00NjA5MDMwNTUwMjVa
+    MEAxHjAcBgNVBAoMFUdQU0xBQi5DQlIuUkVESEFULkNPTTEeMBwGA1UEAwwVQ2Vy
+    dGlmaWNhdGUgQXV0aG9yaXR5MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKC
+    AYEA9NvRvp5Wc//M/yxqi7pn1rFvOH5jn06tpawlh7EyYBLyvtH5kca4rZvAX/nK
+    9Mqht4NPgJnh0xaYx6n7hKw/JuDvMf7YZ50taArBpvDItCzpT7sdjsxjdX40TSqZ
+    G53aKfbRBeENUbiY0cXuFn8vt3yF4JPjSxnVmi1MA679RqRRBrVFZFSPtERvRx+A
+    5nwgfXktYaVH2m9kocMETG49RLhLEM5yrTfo5i9s3dvb1p0wlxVVRwgIHMJJg75/
+    6Fawna6g05gG98fiXoO+ncdHxov/gj2A4gmY0FqBuRzWUGO+ULRUAMDlSfRmzz4p
+    s9JVEWfhU3A+lajqFex78BcdAWhn9BDonyak6tCpZQehSXzkYsaDvIuDSMFgVwVk
+    db52ZBxcRPTgGaWKCjJlCoqLdqA6tarQB1ITjddAdY+XWZemnymR8KTaBFRVz8U4
+    8wLS4HKY/u3DDqYqKBHJu8HJrlZIhjbLafvqQ1VQQLrN39XgAi4D6Jxdd/l/dTP5
+    rdgZAgMBAAGjYzBhMB0GA1UdDgQWBBRMNvMw/RL8vmrlbEboim8qhW2ACzAfBgNV
+    HSMEGDAWgBRMNvMw/RL8vmrlbEboim8qhW2ACzAPBgNVHRMBAf8EBTADAQH/MA4G
+    A1UdDwEB/wQEAwIBxjANBgkqhkiG9w0BAQsFAAOCAYEA4M3tTtA2fJE2BxxLA0s9
+    +Q9sc44xbNlhnHo6UEQd4RMzRJQkWqKZG7ZscZ3/rOswwL6ZJtechhQJOoyNj7Iv
+    B4xkBHps7wD4n1odP37adn0uxBtFe7AZxMloF5MDd5y6d8Mcc1ER2/92uDqF5VCk
+    LCqGKRvs6jfsUUsyzoe5RoZtKTT0ehVnHvEbehoTGwbYqU9qU0mBx2FT1EsBBl0L
+    wKaFcheSPRsgEdIC2q1gOq0YeFD4WBvx4YX533yco21y9mDIWSt2juPx07fd3Aju
+    ttmFP3D1q7sJClGOxBwTIPZG+7rVgJmdybvb45cUhz6iNkyd3ziwrI6j9qXN43nj
+    SO47kYcDok4A/7lY8CDesDPW3+1qtQFpYGeo+wxVNFT2NkHExJRYKX9gZKC+z+I0
+    BzaYRVtvoxK20huhlA+Lt6cfayBQenbIfIM93Nvup0gbpaEDSNX6TzD+C8IcOmIh
+    422B68mIFoI8xplPjg3uVrfHWuiExD4UkZd389K17SyL
+    -----END CERTIFICATE-----

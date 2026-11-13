@@ -1,0 +1,205 @@
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneNodeSet
+metadata:
+  name: openstack-worker-nodes
+  namespace: openstack
+spec:
+  # --- INJECT THIS MAGIC FIELD LINK TO ASSIGN THE ENVIRONMENT ---
+  ansibleEEEnvConfigMapName: openstack-aee-custom-env
+  tls:
+    cacerts: "rootca-internal-secret" # Matches the CA secret we generated
+  networkConfig:
+    # Links directly to your logical NetConfig CR name
+    name: openstacknetconfig
+  preProvisioned: true # Explicitly dictates pre-installed RHEL nodes
+
+  nodeTemplate:
+    # ----------------------------------------------------
+    # EXTRA MOUNT MAPPING
+    # ----------------------------------------------------
+    extraMounts:
+      - extraVolType: Custom
+        volumes:
+          - name: ansible-logs
+            persistentVolumeClaim:
+              claimName: openstack-ansible-logs-pvc # <-- Matches your standard lab storage PVC
+        mounts:
+          - name: ansible-logs
+            mountPath: /runner/artifacts
+      
+    ansibleSSHPrivateKeySecret: dataplane-ansible-ssh-private-key-secret
+    managementNetwork: ctlplane
+    ansible:
+      ansibleUser: svc-ansible # Ensure this user has key-based SSH access on your RHEL nodes
+      ansiblePort: 22
+      #dnsSearchDomains:
+      #  - ctlplane.rhoso.rhlab.local
+      #  - rhoso.rhlab.local
+      # Secret containing the SSH private key used to connect to your RHEL nodes
+      
+      # ----------------------------------------------------
+      # AUTOMATION CREDENTIAL RECOVERY LAYER
+      # ----------------------------------------------------
+      ansibleVarsFrom:
+        - secretRef:
+            name: subscription-manager
+        - secretRef:
+            name: redhat-registry
+            
+      # ----------------------------------------------------
+      # UNIFIED LAB ENVIRONMENT CONFIGURATION CONTAINER
+      # ----------------------------------------------------
+    ansibleVars:
+      edpm_ovn_bridge_mappings:
+        - "datacentre:br-ex"
+      edpm_dns_servers:
+        - 172.16.20.80
+        - 10.2.32.67
+      edpm_dns_search:
+        - openstack.svc
+        - rhoso.rhlab.local
+      edpm_bootstrap_network_resolvconf_update: true
+      # Map dns_search_domains to edpm_dns_search for os-net-config templates
+      dns_search_domains: "{{ edpm_dns_search }}"
+      ctlplane_dns_search_domains: "{{ edpm_dns_search }}"
+      edpm_ovn_extra_bind_mounts:
+        - src: /etc/gai.conf
+          dest: /etc/gai.conf
+          options: "ro"
+
+      # MTU Threshold Matrices
+      ctlplane_mtu: 9000
+      internalapi_mtu: 9000
+      storage_mtu: 9000
+      tenant_mtu: 9000
+      external_mtu: 1500 # Kept safe for upstream non-jumbo router fabrics
+      # CIDR settings
+      ctlplane_cidr: 24
+      internalapi_cidr: 24
+      storage_cidr: 24
+      tenant_cidr: 24
+      # VLAN IDs
+      internalapi_vlan_id: 20
+      storage_vlan_id: 10
+      tenant_vlan_id: 21
+      # IP addresses
+      ctlplane_ip: "10.76.23.33"
+      internalapi_ip: "172.16.20.24"
+      tenant_ip: "172.16.21.24"
+      storage_ip: "172.16.10.24"
+
+      # Target Operating System Stream Control
+      edpm_bootstrap_releasever: "9.4"
+
+      # --- DECLARATIVE RED HAT ENTITLEMENT PROFILE FORCING ---
+      rhc_role: "Red Hat OpenStack"     # Tells the CDN to match your OpenStack entitlement pool
+      rhc_sla: "Premium"                # Matches your internal employee support tier
+      rhc_usage: "Production"
+
+      # Official Native Repositories Matrix
+      edpm_custom_repo_definitions:
+        - name: "rhoso-18.0-for-rhel-9-x86_64-rpms"
+          baseurl: "https://cdn.redhat.com/content/dist/layered/rhel9/x86_64/rhoso/18.0/os"
+        - name: "rhceph-7-tools-for-rhel-9-x86_64-rpms"
+          baseurl: "https://cdn.redhat.com/content/dist/layered/rhel9/x86_64/rhceph-tools/7/os"
+        - repo_id: "fast-datapath-for-rhel-9-x86_64-rpms"
+          baseurl: "https://cdn.redhat.com/content/dist/layered/rhel9/x86_64/fast-datapath/os"
+
+
+      # ----------------------------------------------------
+      # THE JINJA OS-NET-CONFIG EMBEDDED TEMPLATE
+      # ----------------------------------------------------
+      edpm_network_config_template: |
+        {% set mtu_list = [ctlplane_mtu] %}
+        {% for network in nodeset_networks %}
+        {{ mtu_list.append(lookup('vars', networks_lower[network] ~ '_mtu')) }}
+        {%- endfor %}
+        {% set min_viable_mtu = mtu_list | max %}
+        
+        network_config:
+        - type: ovs_bridge
+          name: {{ neutron_physical_bridge_name | default('br-ex') }}
+          mtu: {{ min_viable_mtu }}
+          use_dhcp: false
+          dns_servers: {{ ctlplane_dns_nameservers }}
+          domain: {{ dns_search_domains }}
+          addresses:
+          - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr | default('24') }}
+          routes: {{ ctlplane_host_routes }}
+          members:
+          - type: linux_bond
+            name: bond0
+            mtu: {{ min_viable_mtu }}
+            bonding_options: "mode=802.3ad lacp_rate=fast updelay=1000 miimon=100 xmit_hash_policy=layer3+4"
+            members:
+            - type: interface
+              name: ens2f0
+              mtu: {{ min_viable_mtu }}
+              primary: true
+            - type: interface
+              name: ens2f1
+              mtu: {{ min_viable_mtu }}
+        {% for network in nodeset_networks %}
+        {% if network | lower != 'ctlplane' %}
+        - type: vlan
+          name: {{ network | lower }}
+          device: bond0
+          mtu: {{ lookup('vars', (networks_lower[network] | default(network | lower)) ~ '_mtu') | default(9000) | int }}
+          vlan_id: {{ lookup('vars', networks_lower[network] ~ '_vlan_id') | int }}
+          addresses:
+          - ip_netmask: "{{ lookup('vars', networks_lower[network] ~ '_ip') }}/{{ lookup('vars', networks_lower[network] ~ '_cidr') | string }}"
+          routes: {{ lookup('vars', networks_lower[network] ~ '_host_routes') | default([], true) }}
+        {% endif %}
+        {% endfor %}
+
+  # ----------------------------------------------------
+  # OPERATOR DEPLOYMENT RUN SEQUENCES
+  # ----------------------------------------------------
+  services:
+    # Phase 1: Host OS & Infrastructure Preparation
+    - redhat             # Optional: Subscription & repo registration
+    - bootstrap          # System bootstrap, SSH keys, user setup
+    - download-cache     # Caching container images/packages
+    - configure-network  # Applies network topology via os-net-config
+    - validate-network   # Verifies IP assignments and VLAN routing
+    - custom-gai-conf
+    - install-os         # Installs system dependencies and packages
+    - configure-os       # Tunes OS, sysctl, kernel parameters, tuned
+    - ssh-known-hosts    # Sets up host keys for live migration
+    - run-os             # Runs custom host-level OS hooks
+    - reboot-os         # Reboots node to apply OS & kernel changes
+    - install-certs      # Distributes CA trust anchors and TLS certificates
+
+    # Phase 2: OpenStack Compute & Networking Runtime
+    - ovn                # Runs ovn-controller on the node
+    # This one is only required for advanced neutron configurations
+    # - neutron-ovn        # Configures Advanced Neutron host configs and physical mappings 
+    #                      # (primarily for Networker, SR-IOV, or Gateway nodes).
+    - neutron-metadata   # Configures Neutron metadata agent for 169.254.169.254
+    - libvirt            # Deploys and configures the libvirt daemon
+    - nova               # Deploys and starts the nova-compute service
+
+  # Individual physical node definitions
+  nodes:
+    compute-0:
+      hostName: compute1.ctlplane.rhoso.rhlab.local
+      networks:
+      - name: ctlplane
+        subnetName: subnet1
+        defaultRoute: true
+        fixedIP: 10.76.23.33
+      - name: internalapi
+        subnetName: subnet1
+        fixedIP: 172.16.20.13
+      - name: storage
+        subnetName: subnet1
+        fixedIP: 172.16.10.13
+      - name: tenant
+        subnetName: subnet1
+        fixedIP: 172.16.21.13
+      ansible:
+        ansibleHost: 10.76.23.33
+        ansibleUser: svc-ansible
+        ansibleVars:
+          fqdn_internal_api: compute1.internalapi.rhoso.rhlab.local
+

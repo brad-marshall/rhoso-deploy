@@ -1,0 +1,168 @@
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: rhoso-network-master1
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: 'master1.rhoso.rhlab.local'
+  desiredState:
+    interfaces:
+      # 1. Ensure the underlying bond is up
+      - name: bond0
+        type: bond
+        state: up
+        bond:
+          mode: 802.3ad
+          port: [ens2f0, ens2f1]
+
+      # 2. Declare br-ex, place bond0 inside it, and shift the untagged host IP here
+      - name: br-ex
+        type: OVS-bridge
+        state: up
+        bridge:
+          port:
+            - name: bond0
+        ipv4:
+          enabled: true
+          copy-from: bond0
+
+      # 3. Create your OpenStack Service Tagged VLANs on top of the bond
+      - name: internalapi
+        type: vlan
+        state: up
+        vlan:
+          base-iface: bond0
+          id: 20 # VLAN 20 for OpenStack Internal API
+
+      - name: storage
+        type: vlan
+        state: up
+        vlan:
+          base-iface: bond0
+          id: 10 # VLAN 21 for OpenStack Storage
+        ipv4:
+          enabled: true
+          address:
+            - ip: 172.16.10.21
+              prefix-length: 24
+          dhcp: false
+
+      - name: tenant.21
+        type: vlan
+        state: up
+        vlan:
+          base-iface: bond0
+          id: 21 # VLAN 21 for OpenStack Storage
+---
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: rhoso-network-master2
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: 'master2.rhoso.rhlab.local'
+  desiredState:
+    interfaces:
+      # 1. Ensure the underlying bond is up
+      - name: bond0
+        type: bond
+        state: up
+        bond:
+          mode: 802.3ad
+          port: [ens2f0, ens2f1]
+
+      # 2. Declare br-ex, place bond0 inside it, and shift the untagged host IP here
+      - name: br-ex
+        type: OVS-bridge
+        state: up
+        bridge:
+          port:
+            - name: bond0
+        ipv4:
+          enabled: true
+          copy-from: bond0
+
+      # 3. Create your OpenStack Service Tagged VLANs on top of the bond
+      - name: internalapi
+        type: vlan
+        state: up
+        vlan:
+          base-iface: bond0
+          id: 20 # VLAN 20 for OpenStack Internal API
+
+      - name: storage
+        type: vlan
+        state: up
+        vlan:
+          base-iface: bond0
+          id: 10 # VLAN 21 for OpenStack Storage
+        ipv4:
+          enabled: true
+          address:
+            - ip: 172.16.10.22
+              prefix-length: 24
+          dhcp: false
+
+      - name: tenant.21
+        type: vlan
+        state: up
+        vlan:
+          base-iface: bond0
+          id: 21 # VLAN 21 for OpenStack Storage
+---
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: rhoso-network-master3
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: 'master3.rhoso.rhlab.local'
+  desiredState:
+    interfaces:
+      # 1. Ensure the underlying bond is up
+      - name: bond0
+        type: bond
+        state: up
+        bond:
+          mode: 802.3ad
+          port: [ens2f0, ens2f1]
+
+      # 2. Declare br-ex, place bond0 inside it, and shift the untagged host IP here
+      - name: br-ex
+        type: OVS-bridge
+        state: up
+        bridge:
+          port:
+            - name: bond0
+        ipv4:
+          enabled: true
+          copy-from: bond0
+
+      # 3. Create your OpenStack Service Tagged VLANs on top of the bond
+      - name: internalapi
+        type: vlan
+        state: up
+        vlan:
+          base-iface: bond0
+          id: 20 # VLAN 20 for OpenStack Internal API
+
+      - name: storage
+        type: vlan
+        state: up
+        vlan:
+          base-iface: bond0
+          id: 10 # VLAN 21 for OpenStack Storage
+        ipv4:
+          enabled: true
+          address:
+            - ip: 172.16.10.23
+              prefix-length: 24
+          dhcp: false
+
+      - name: tenant.21
+        type: vlan
+        state: up
+        vlan:
+          base-iface: bond0
+          id: 21 # VLAN 21 for OpenStack Storage
+---

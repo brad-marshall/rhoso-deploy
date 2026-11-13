@@ -1,0 +1,33 @@
+# 1. Create a self-signed issuer to bootstrap the Root CA
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: rootca-internal
+  namespace: openstack
+spec:
+  selfSigned: {}
+---
+# 2. Generate the Root CA certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rootca-internal
+  namespace: openstack
+spec:
+  isCA: true
+  commonName: rootca-internal
+  secretName: rootca-internal-secret
+  issuerRef:
+    name: rootca-internal
+    kind: Issuer
+    group: cert-manager.io
+---
+# 3. Create the actual Issuer OpenStack will use, backed by the Root CA
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: openstack-internal
+  namespace: openstack
+spec:
+  ca:
+    secretName: rootca-internal-secret

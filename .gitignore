@@ -1,0 +1,7 @@
+*.iso
+*.img
+*vmlinuz
+rhoso18-installer*
+logs*
+tmp*
+backup*

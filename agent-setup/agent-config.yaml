@@ -1,0 +1,237 @@
+apiVersion: v1beta1
+kind: AgentConfig
+metadata:
+  name: rhoso18-poc
+rendezvousIP: 10.76.23.30
+minimalISO: true
+# For a disconnected install, uncomment and point this to your rootfs
+#bootArtifactsBaseURL: http://10.76.23.5/images
+hosts:
+  # ================= NODE 0 =================
+  - hostname: master1.rhoso.rhlab.local
+    role: master
+    rootDeviceHints:
+      deviceName: /dev/sda
+    interfaces:
+      - name: ens2f0
+        macAddress: 54:ab:3a:70:d3:bd
+      - name: ens2f1
+        macAddress: 54:ab:3a:70:d3:be
+      - name: ens1f0
+        macAddress: 3c:fd:fe:b1:15:4c
+      - name: ens1f1
+        macAddress: 3c:fd:fe:b1:15:4d
+    networkConfig:
+      interfaces:
+        - name: ens1f0
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: ens1f1
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: ens2f0
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: ens2f1
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: bond0
+          type: bond
+          state: up
+          link-aggregation:
+            mode: 802.3ad
+            options:
+              miimon: "100"
+              lacp_rate: "fast"
+            port: 
+              - ens2f0
+              - ens2f1
+          ipv4:
+            enabled: true
+            address: 
+              - ip: 10.76.23.30
+                prefix-length: 24
+            dhcp: false
+            auto-dns: false
+          ipv6:
+            enabled: false
+      dns-resolver:
+        config:
+          server:
+            - 10.76.23.243
+            - 10.76.23.244
+            - 10.76.23.245
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 10.76.23.254
+            next-hop-interface: bond0
+
+  # ================= NODE 1 =================
+  - hostname: master2.rhoso.rhlab.local
+    role: master
+    rootDeviceHints:
+      deviceName: /dev/sda
+    interfaces:
+      - name: ens2f0
+        macAddress: 54:ab:3a:24:3b:f7
+      - name: ens2f1
+        macAddress: 54:ab:3a:24:3b:f8
+      - name: ens1f0
+        macAddress: 3c:fd:fe:b1:65:58
+      - name: ens1f1
+        macAddress: 3c:fd:fe:b1:65:59
+    networkConfig:
+      interfaces:
+        - name: ens1f0
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: ens1f1
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: ens2f0
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: ens2f1
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: bond0
+          type: bond
+          state: up
+          link-aggregation:
+            mode: 802.3ad
+            options:
+              miimon: "100"
+              lacp_rate: "fast"
+            port: 
+              - ens2f0
+              - ens2f1
+          ipv4:
+            enabled: true
+            address: 
+              - ip: 10.76.23.31
+                prefix-length: 24
+            dhcp: false
+            auto-dns: false
+          ipv6:
+            enabled: false
+      dns-resolver:
+        config:
+          server:
+            - 10.76.23.243
+            - 10.76.23.244
+            - 10.76.23.245
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 10.76.23.254
+            next-hop-interface: bond0
+
+  # ================= NODE 2 =================
+  - hostname: master3.rhoso.rhlab.local
+    role: master
+    rootDeviceHints:
+      deviceName: /dev/sda
+    interfaces:
+      - name: ens2f0
+        macAddress: 54:ab:3a:3d:28:56
+      - name: ens2f1
+        macAddress: 54:ab:3a:3d:28:57
+      - name: ens1f0
+        macAddress: 3c:fd:fe:b1:65:54
+      - name: ens1f1
+        macAddress: 3c:fd:fe:b1:65:55
+    networkConfig:
+      interfaces:
+        - name: ens1f0
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: ens1f1
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: ens2f0
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: ens2f1
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: false
+          ipv6:
+            enabled: false
+        - name: bond0
+          type: bond
+          state: up
+          link-aggregation:
+            mode: 802.3ad
+            options:
+              miimon: "100"
+              lacp_rate: "fast"
+            port: 
+              - ens2f0
+              - ens2f1
+          ipv4:
+            enabled: true
+            address: 
+              - ip: 10.76.23.32
+                prefix-length: 24
+            dhcp: false
+            auto-dns: false
+          ipv6:
+            enabled: false
+      dns-resolver:
+        config:
+          server:
+            - 10.76.23.243
+            - 10.76.23.244
+            - 10.76.23.245
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 10.76.23.254
+            next-hop-interface: bond0
+
